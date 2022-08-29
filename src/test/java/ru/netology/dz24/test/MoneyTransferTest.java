@@ -1,5 +1,6 @@
 package ru.netology.dz24.test;
 
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -16,9 +17,12 @@ public class MoneyTransferTest {
     @BeforeEach
     void setUp() {
         open("http://localhost:9999");
-        Configuration.holdBrowserOpen = true;
+        var loginPage = new LoginPage();
+        var authInfo = DataHelper.getAuthInfo();
+        var verificationPage = loginPage.validLogin(authInfo);
+        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
+        verificationPage.validVerify(verificationCode);
     }
-
     @AfterEach
     void memoryClear() {
         clearBrowserCookies();
@@ -26,98 +30,71 @@ public class MoneyTransferTest {
     }
 
     @Test
-    void shouldTransferMoneyFromFirstInSecond() {
-        open("http://localhost:9999");
-        var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
-        var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
-        verificationPage.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        var startingBalance1 = dashboardPage.getCardBalance(0);
-        var startingBalance2 = dashboardPage.getCardBalance(1);
-        var moneyTransferPage = new MoneyTransfer();
-        var amount = moneyTransferPage.getAmount();
-        moneyTransferPage.transferFromFirstToSecond(amount);
-        var actualBalance1 = dashboardPage.getCardBalance(0);
-        var actualBalance2 = dashboardPage.getCardBalance(1);
-        Assertions.assertEquals(startingBalance1 + amount, actualBalance1);
-        Assertions.assertEquals(startingBalance2, actualBalance2 + amount);
+    void shouldTransferMoneyFromSecondToFirst() {
+        var dashboardPage = new DashboardPage();
+        int expected = dashboardPage.getCardBalance("1") + 1000;
+        dashboardPage.depositToFirst();
+        var transferPage = new MoneyTransfer();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardTwo(), "1000");
+        int actual = dashboardPage.getCardBalance("1");
+
+        Assertions.assertEquals(expected, actual);
     }
 
     @Test
-    void shouldTransferMoneyFromSecondInFirst() {
-        var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
-        var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
-        verificationPage.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        var startingBalance1 = dashboardPage.getCardBalance(0);
-        var startingBalance2 = dashboardPage.getCardBalance(1);
-        var moneyTransferPage = new MoneyTransfer();
-        var amount = moneyTransferPage.getAmount();
-        moneyTransferPage.transferFromSecondToFirst(amount);
-        var actualBalance1 = dashboardPage.getCardBalance(0);
-        var actualBalance2 = dashboardPage.getCardBalance(1);
-        Assertions.assertEquals(startingBalance1 - amount, actualBalance1);
-        Assertions.assertEquals(startingBalance2 + amount, actualBalance2);
+    void shouldTransferMoneyFromFirstToSecond() {
+        var dashboardPage = new DashboardPage();
+        int expected = dashboardPage.getCardBalance("2") + 1000;
+        dashboardPage.depositToSecond();
+        var transferPage = new MoneyTransfer();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardOne(), "1000");
+        int actual = dashboardPage.getCardBalance("2");
+
+        Assertions.assertEquals(expected, actual);
     }
 
     @Test
-    void shouldTransferMoneyFromSecondInSecond() {
-        var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
-        var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
-        verificationPage.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        var startingBalance1 = dashboardPage.getCardBalance(0);
-        var startingBalance2 = dashboardPage.getCardBalance(1);
-        var moneyTransferPage = new MoneyTransfer();
-        var amount = moneyTransferPage.getAmount();
-        moneyTransferPage.transferFromSecondToSecond(amount);
-        var actualBalance1 = dashboardPage.getCardBalance(0);
-        var actualBalance2 = dashboardPage.getCardBalance(1);
-        Assertions.assertEquals(startingBalance1, actualBalance1);
-        Assertions.assertEquals(startingBalance2, actualBalance2);
+    void shouldTransferTotalDeposit() {
+        var dashboardPage = new DashboardPage();
+        String balance = toString(dashboardPage.getCardBalance("1"));
+        dashboardPage.depositToSecond();
+        var transferPage = new MoneyTransfer();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardOne(), balance);
+        int expected = 0;
+        int actual = dashboardPage.getCardBalance("1");
+
+        Assertions.assertEquals(expected, actual);
     }
 
     @Test
-    void shouldTransferMoneyFromFirstInFirst() {
-        var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
-        var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
-        verificationPage.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        var startingBalance1 = dashboardPage.getCardBalance(0);
-        var startingBalance2 = dashboardPage.getCardBalance(1);
-        var moneyTransferPage = new MoneyTransfer();
-        var amount = moneyTransferPage.getAmount();
-        moneyTransferPage.transferFromFirstToFirst(amount);
-        var actualBalance1 = dashboardPage.getCardBalance(0);
-        var actualBalance2 = dashboardPage.getCardBalance(1);
-        Assertions.assertEquals(startingBalance1, actualBalance1);
-        Assertions.assertEquals(startingBalance2, actualBalance2);
+    void shouldTransferTwice() {
+        var dashboardPage = new DashboardPage();
+        int expected = dashboardPage.getCardBalance("2") + 4000;
+        dashboardPage.depositToSecond();
+        var transferPage = new MoneyTransfer();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardOne(), "1000");
+        dashboardPage.depositToSecond();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardOne(), "3000");
+        int actual = dashboardPage.getCardBalance("2");
+
+        Assertions.assertEquals(expected, actual);
     }
 
+
     @Test
-    void shouldTransferMoneyFromFirstToSecondNegative() {
-        var loginPage = new LoginPage();
-        var authInfo = DataHelper.getAuthInfo();
-        var verificationPage = loginPage.validLogin(authInfo);
-        var verificationCode = DataHelper.getVerificationCodeFor(authInfo);
-        verificationPage.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        var startingBalance1 = dashboardPage.getCardBalance(0);
-        var startingBalance2 = dashboardPage.getCardBalance(1);
-        var moneyTransferPage = new MoneyTransfer();
-        var amount = 100000;
-        moneyTransferPage.transferFromFirstToSecond(amount);
-        var actualBalance1 = dashboardPage.getCardBalance(0);
-        var actualBalance2 = dashboardPage.getCardBalance(1);
-        Assertions.assertEquals(startingBalance1 - amount, actualBalance1);
-        Assertions.assertEquals(startingBalance2 + amount, actualBalance2);
+    void shouldNotTransferMoreThanBalance() {
+        var dashboardPage = new DashboardPage();
+        String balance = toString(dashboardPage.getCardBalance("1") + 1000);
+        dashboardPage.depositToSecond();
+        var transferPage = new MoneyTransfer();
+        transferPage.moneyTransfer(DataHelper.CardInfo.getCardOne(), balance);
+
+        transferPage.getError().shouldBe(Condition.visible);
     }
+
+    private String toString(int cardBalance) {
+        String result = Integer.toString(cardBalance);
+        return result;
+    }
+
 }

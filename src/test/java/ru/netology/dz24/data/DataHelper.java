@@ -31,16 +31,15 @@ public class DataHelper {
     }
 
     @Value
-    public static class CardNumber {
-        private String cardNumber;
-    }
+    public static class CardInfo {
+        private String number;
 
-    public static final CardNumber getCardNumber1() {
-        return new CardNumber("5559000000000001");
-    }
+        public static CardInfo getCardOne() {
+            return new CardInfo("5559000000000001");
+        }
 
-    public static final CardNumber getCardNumber2() {
-        return new CardNumber("5559000000000002");
+        public static CardInfo getCardTwo() {
+            return new CardInfo("5559000000000002");
+        }
     }
-
 }

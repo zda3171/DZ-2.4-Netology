@@ -12,56 +12,20 @@ import java.util.Locale;
 
 import static com.codeborne.selenide.Selenide.$;
 
-@Value
 public class MoneyTransfer {
-    SelenideElement h1 = $("h1");
-    SelenideElement popUpString = $("[data-test-id=amount] input");
-    SelenideElement from = $("[data-test-id=from] [type=tel]");
-    SelenideElement transferTo = $("[data-test-id=to]");
-    SelenideElement popUpButton = $("[data-test-id=action-transfer]");
-    SelenideElement cancelButton = $("[data-test-id=action-cancel]");
-    DashboardPage dashboardPage = new DashboardPage();
+        private SelenideElement amount = $("[data-test-id=amount] input");
+        private SelenideElement fromField = $("[data-test-id=from] input");
+        private SelenideElement transfer = $("[data-test-id=action-transfer]");
+        private SelenideElement error = $("[data-test-id=error-notification]");
 
-    public MoneyTransfer() {
-        h1.shouldBe(Condition.visible, Duration.ofMillis(15));
+        public DashboardPage moneyTransfer(DataHelper.CardInfo from, String howMuch) {
+            amount.setValue(howMuch);
+            fromField.setValue(from.getNumber());
+            transfer.click();
+            return new DashboardPage();
+        }
+
+        public SelenideElement getError() {
+            return error;
+        }
     }
-
-    Faker fake = new Faker(new Locale("ru"));
-    private int amount = fake.number().numberBetween(1, 1000);
-
-    public void transferFromFirstToSecond(int amount) {
-        String firstCard = DataHelper.getCardNumber1().getCardNumber();
-        String secondCard = DataHelper.getCardNumber2().getCardNumber();
-        dashboardPage.popUpFirstCard();
-        popUpString.doubleClick().val(amount + "");
-        from.val(secondCard);
-        popUpButton.click();
-    }
-
-    public void transferFromSecondToFirst(int amount) {
-        String firstCard = DataHelper.getCardNumber1().getCardNumber();
-        String secondCard = DataHelper.getCardNumber2().getCardNumber();
-        dashboardPage.popUpSecondCard();
-        popUpString.doubleClick().val(amount + "");
-        from.val(firstCard);
-        popUpButton.click();
-    }
-
-    public void transferFromSecondToSecond(int amount) {
-        String firstCard = DataHelper.getCardNumber1().getCardNumber();
-        String secondCard = DataHelper.getCardNumber2().getCardNumber();
-        dashboardPage.popUpSecondCard();
-        popUpString.doubleClick().val(amount + "");
-        from.val(secondCard);
-        popUpButton.click();
-    }
-
-    public void transferFromFirstToFirst(int amount) {
-        String firstCard = DataHelper.getCardNumber1().getCardNumber();
-        String secondCard = DataHelper.getCardNumber2().getCardNumber();
-        dashboardPage.popUpSecondCard();
-        popUpString.doubleClick().val(amount + "");
-        from.val(secondCard);
-        popUpButton.click();
-    }
-}
